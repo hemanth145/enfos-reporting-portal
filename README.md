@@ -24,8 +24,14 @@ interactive table — with proper loading, empty, and error states throughout.
 
 ## Run it — pick one
 
-Both options build **and** run the whole stack (frontend + Java backend) from a
-single command, from a clean checkout, with no missing pieces.
+The assessment asks for a **single command** to build and run the app, and notes
+that a script, a make target, or a docker compose command are all acceptable
+forms. This project provides **two** — pick whichever fits your environment. Each
+one builds **and** runs the whole stack (frontend + Java backend) from a clean
+checkout with no missing pieces:
+
+- **Option A — `docker compose up --build`** (the docker compose form) — recommended.
+- **Option B — `./run.sh` / `run.cmd`** (the script form) — no Docker required.
 
 ### Option A — Docker (recommended)
 
