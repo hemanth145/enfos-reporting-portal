@@ -2,6 +2,9 @@
 backend/target/
 *.class
 
+# Frontend build bundled into the backend by the run script (generated)
+backend/src/main/resources/static/
+
 # Node / Vite
 frontend/node_modules/
 frontend/dist/

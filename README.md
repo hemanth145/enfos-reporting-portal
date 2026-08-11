@@ -6,7 +6,7 @@ interactive table — with proper loading, empty, and error states throughout.
 
 - **Frontend:** React + TypeScript + Vite + Tailwind CSS
 - **Backend:** Java 21 + Spring Boot 3 (REST API, in-memory mock data)
-- **Run it:** one command — `docker compose up --build`
+- **Run it (one command):** `docker compose up --build` — or, without Docker, `./run.sh` (`run.cmd` on Windows)
 
 ---
 
@@ -22,31 +22,48 @@ interactive table — with proper loading, empty, and error states throughout.
 
 ---
 
-## Quick start (Docker — recommended)
+## Run it — pick one
 
-The only prerequisite is **Docker Desktop** (with Docker Compose v2+). From a clean
-checkout:
+Both options build **and** run the whole stack (frontend + Java backend) from a
+single command, from a clean checkout, with no missing pieces.
+
+### Option A — Docker (recommended)
+
+Prerequisite: **Docker Desktop** with Docker Compose v2+.
 
 ```bash
 docker compose up --build
 ```
 
-Then open **http://localhost:3000**.
+Then open **http://localhost:3000**. This builds two images and starts both services:
 
-This builds two images and starts both services:
-
-- `backend` — Spring Boot API, built with Maven inside the image, runs on port 8080 (internal to the compose network).
-- `frontend` — the production React bundle served by nginx on port 3000, which also reverse-proxies `/api` to the backend (so the browser talks to a single origin — no CORS in the deployed setup).
+- `backend` — Spring Boot API, built with Maven inside the image, on port 8080 (internal to the compose network).
+- `frontend` — the production React bundle served by nginx on port 3000, which reverse-proxies `/api` to the backend (so the browser talks to a single origin — no CORS in the deployed setup).
 
 Stop with `Ctrl+C`, then `docker compose down` to remove the containers.
 
+### Option B — No Docker (single jar)
+
+Prerequisites: **JDK 21** and **Node.js 20+** on your PATH. (Maven comes via the
+bundled wrapper — nothing else to install.)
+
+```bash
+./run.sh        # macOS / Linux
+run.cmd         # Windows
+```
+
+Then open **http://localhost:8080**. The script builds the React app, bundles it
+into the Spring Boot jar, builds the jar, and runs it — so a single Java process
+serves both the UI and the API on one port. Stop with `Ctrl+C`.
+
 ---
 
-## Alternative: run locally without Docker
+## Development (hot reload)
 
-Useful for development. Prerequisites: **JDK 21** and **Node.js 20+**.
+For day-to-day development, run the two dev servers separately so you get Vite HMR
+and Spring DevTools-style fast restarts. Prerequisites: **JDK 21**, **Node.js 20+**.
 
-**1. Backend** (from `backend/`) — uses the bundled Maven wrapper, no local Maven needed:
+**1. Backend** (from `backend/`) — bundled Maven wrapper, no local Maven needed:
 
 ```bash
 cd backend
@@ -64,7 +81,8 @@ npm run dev
 ```
 
 The dev server runs on http://localhost:5173 and proxies `/api` to the backend on
-8080 (see `vite.config.ts`), so relative API URLs work exactly as they do in Docker.
+8080 (see `vite.config.ts`), so relative API URLs work exactly as they do in the
+Docker and single-jar setups.
 
 ---
 
@@ -91,12 +109,13 @@ Base path: `/api`
 
 ```
 enfos-reporting-portal/
-├── docker-compose.yml          # brings up the whole stack
+├── docker-compose.yml          # Option A: brings up the whole stack
+├── run.sh / run.cmd            # Option B: build + run everything as a single jar
 ├── backend/                    # Spring Boot API
 │   ├── Dockerfile              # multi-stage: Maven build -> slim JRE
 │   ├── mvnw / mvnw.cmd         # Maven wrapper (no local Maven required)
 │   └── src/main/java/com/enfos/reporting/
-│       ├── controller/         # ReportController — REST endpoints
+│       ├── controller/         # ReportController (REST) + SpaController (SPA forwarding)
 │       ├── service/            # ReportService — mock data + logic
 │       ├── model/              # records: ReportSummary, User, Department, Project
 │       └── config/             # WebConfig — CORS for the dev server
@@ -131,10 +150,13 @@ report, and the error state offers a "Try again" retry.
 (message + retry), empty (no rows, or "no search matches"), and populated. The empty
 state on the landing page adapts its message depending on whether a search is active.
 
-**Single origin in production.** Rather than enabling permissive CORS in the deployed
-app, nginx serves the frontend and reverse-proxies `/api` to the backend, so the
-browser only ever hits one origin. CORS is enabled only for the Vite dev server
-(`WebConfig`), where the two run on different ports.
+**Single origin, two serving strategies.** The browser always talks to one origin
+(no CORS in the shipped app). In Docker, nginx serves the frontend and
+reverse-proxies `/api` to the backend; in the single-jar mode, Spring Boot serves
+the bundled frontend directly and `SpaController` forwards client-side routes to
+`index.html`. Because the frontend uses relative `/api` URLs, the same build works
+in both. CORS is enabled only for the Vite dev server (`WebConfig`), where the two
+run on different ports.
 
 **Backend data layer.** Data is in-memory mock data (the brief allows this; a database
 is optional). `ReportService` is deliberately shaped so it could be swapped for a
@@ -175,6 +197,6 @@ npm run lint
 
 | Path | Requires |
 | --- | --- |
-| Docker (recommended) | Docker Desktop + Compose v2 |
-| Local backend | JDK 21 (Maven via the bundled wrapper) |
-| Local frontend | Node.js 20+ |
+| Option A — Docker | Docker Desktop + Compose v2 |
+| Option B — single jar (`run.sh` / `run.cmd`) | JDK 21 + Node.js 20+ (Maven via the bundled wrapper) |
+| Development (hot reload) | JDK 21 + Node.js 20+ |
