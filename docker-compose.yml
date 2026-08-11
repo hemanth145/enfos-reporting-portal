@@ -1,0 +1,24 @@
+# Brings up the full stack with one command: `docker compose up --build`
+# - backend:  Spring Boot API on :8080 (internal)
+# - frontend: nginx serving the React build on :3000, proxying /api -> backend
+services:
+  backend:
+    build: ./backend
+    container_name: enfos-backend
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/api/reports"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+
+  frontend:
+    build: ./frontend
+    container_name: enfos-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_started

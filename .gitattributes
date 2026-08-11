@@ -1,0 +1,13 @@
+# Normalize line endings across platforms.
+* text=auto
+
+# Shell scripts must stay LF so they run on macOS/Linux reviewers' machines.
+*.sh   text eol=lf
+mvnw   text eol=lf
+
+# Windows batch files stay CRLF.
+*.cmd  text eol=crlf
+*.bat  text eol=crlf
+
+# Treat screenshots as binary.
+*.png  binary
